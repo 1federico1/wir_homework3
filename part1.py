@@ -1,3 +1,6 @@
+import nltk
+nltk.download('all')
+
 from sklearn.datasets import load_files
 from sklearn.model_selection import train_test_split
 
@@ -6,6 +9,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.corpus import stopwords
 from nltk.stem.snowball import EnglishStemmer
 from nltk import word_tokenize
+
 
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.neighbors import KNeighborsClassifier
