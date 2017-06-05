@@ -99,7 +99,7 @@ pipeline = Pipeline([
 parameters = {
     'vect__tokenizer': [None, english_tokenizer, porter_tokenizer, lancaster_tokenizer],
     'vect__ngram_range': [(1, 1), (1, 2)],
-    'kNN__n_neighbors': [i for i in range(3, 5)]
+    'kNN__n_neighbors': [i for i in range(3, 10)]
 }
 
 ## Create a Grid-Search-Cross-Validation object
@@ -158,15 +158,18 @@ print
 
 # Compute the confusion matrix
 confusion_matrix = metrics.confusion_matrix(Y_test, Y_predicted)
+print
 print("Confusion Matrix: True-Classes X Predicted-Classes")
 print(confusion_matrix)
 
 # Compute the Normalized-accuracy
 normalized_accuracy = metrics.accuracy_score(Y_test, Y_predicted)
+print
 print("Normalized Accuracy: ")
 print(normalized_accuracy)
 
 # Compute the Matthews Corrcoef value
 matthews_corr_coef = metrics.matthews_corrcoef(Y_test, Y_predicted)
-print("Matthews correllation coefficient: ")
+print
+print("Matthews correlation coefficient: ")
 print(matthews_corr_coef)
