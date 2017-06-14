@@ -1,0 +1,95 @@
+\documentclass[11pt]{article}
+\usepackage{graphicx}
+\usepackage{mathtools}
+\begin{document}
+
+\begin{titlepage}
+	\begin{center}
+		\vspace*{\fill}
+		\begin{Huge}
+			Homework \#3\\
+			
+			
+			Web Information Retrieval
+		\end{Huge}
+		\newline
+		\newline
+		Federico Arcangeli \-- 1771113, Fabrizio Tropeano \--1771734\\
+		\vspace*{\fill}	
+	\end{center}
+\end{titlepage}
+
+
+\section{Introduction}
+The following document concerns the text classification problems, solved by applying supervised learning techniques and is part of the third homework of the \textit{Web Information Retrieval} course.\\
+The goal of this homework is to tune and train different classifiers. In order to complete the job we used the \textit{scikit-learn} library, to adjust the classifiers, and \textit{nltk} library to compute the lexical analysis.
+The homework is divided in two parts: \\
+\begin{itemize}
+\item{\textbf{Part One:} } In this part of the homework we tune and train a classifier based on \textit{K-Nearest-Neighbors} technique for detecting spam comments associated to YouTube videos.
+\item{\textbf{Part Two:} } Here, we tune and train three different classifiers to solve a sentiment analysis problem.
+\end{itemize}
+
+
+
+
+\section{Part One}
+In this part of the homework we had to solve a Spam-Ham classification problem, using a kNN classifier and some scikit-learn tools, trying to find the best combination of parameters for solving the problem. In order to reach the goal and to avoid overfitting, we performed a \textit{10-Fold-Cross-Validation process} through the grid-searchCV, a tool able to exhaustively considers all parameter combinations. To represent documents as vectors we used the scikit-learn class \textit{TfIdfVectorizer}.  Once we have the best combination of parameters, we started to evaluate the performance of the classifier on the Test-Set.  \\
+For the evaluation process we used the following tools provided by scikit-learn:\\
+\begin{itemize}
+\item{$\textbf{metrics.classification\_report:}$} To have a report with the main classification metrics
+\item{$\textbf{metrics.confusion\_matrix:}$} To compute the Confusion-Matrix, a tool to evaluate the accuracy of a classification. By definition a confusion matrix $C$ is such that $C_{i, j}$ is equal to the number of observations known to be in group $i$ but predicted to be in group $j$. 
+\item{$\textbf{metrics.accuracy\_score:}$} Used to calculate the Normalized-accuracy. This function computes subset accuracy, i.e. the set of labels predicted for a sample must exactly match the corresponding set of ground-truth labels. 
+\item{$\textbf{metrics.matthews\_corrcoef:}$} In order to compute the Matthews correlation coefficient. The Matthews correlation coefficient is used in machine learning as a measure of the quality of binary classifications. It takes into account true and false positives and negatives. The MCC is in essence a correlation coefficient value between -1 and +1. A coefficient of +1 represents a perfect prediction, 0 an average random prediction and -1 an inverse prediction. 
+\end{itemize}
+To tune and train the classifier, we used the data collected inside the directory \textit{Training} while to evaluate the performance of the final classifier, we used the data collected inside the directory \textit{Test}.\\
+
+\subsection{Choice of parameters}
+Defining the Grid-SearchCV, we used a Pipeline object to assemble several steps that can be cross-validated while setting different parameters. These parameters refer mostly on the kNN classifier and the \textit{Tf-Idf Vectorizer}. To find the best combination of parameters for the classifier we applied an exhaustively search on its following attributes : 
+\begin{itemize}
+\item{\textbf{weights:}} A weight function used in prediction. We used \textit{uniform} and \textit{distance}. In uniform, all points are weighted equally while in distance closer neighbors of a query point will have a greater influence than neighbors which are further away. 
+\item{$\textbf{n\_neighbors:}$}  It is desirable for $n$ to be odd to make ties less likely. The values 3 and 5 are the most common choices. However, we tried values in a range from 3 to 11.
+
+\end{itemize} 
+
+Regarding to the vectorizer we set a part of its parameters as follows:
+\begin{itemize}
+\item{\textbf{Tokenizer:}} Tokenization is the process of classifying sections of a string of input characters. Before creating the tokenizer we used the English stemmer with and without \textit{stopwords}. 
+\item{$\textbf{Ngram\_range:}$}  An n-gram is a contiguous sequence of $n$ items from a given sequence of text. We analyzed the data once as unigrams (n=1) and once as bigrams (n=2) .\\
+For example, with a sentence like \textit{"The quick brown fox jumps over the lazy dog"} we have :\\
+\textbf{Unigram:} "The", "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog"\\
+\textbf{Bigram:} "The quick", "quick brown", "brown fox", "fox jumps", "jumps over", "over the", "the lazy", "lazy dog"
+\end{itemize}
+
+
+
+\section{Part Two}
+In this part of the homework we had to tune and train three different classifiers to solve a sentimental analysis problem. These classifiers have to be able to classify sentences representing positive and negative opinions about movies. We used only supervised learning methods: \textit{K-Nearest Neighbors}, \textit{Multinomial Naive Bayes Classifier} and \textit{Support Vector Machine}. We discussed K-Nearest Neighbors approach in the previous section. Now, we see two other methods. 
+
+\subsection{Multinomial Naive Bayes}
+The multinomial naive bayes model is a probabilistic supervised learning method. The probability of a document $d$ being in class $c$ is computed as: \\
+\begin{center}
+{$\Pr{(c|d)} \propto{\Pr{(c)} \prod_{1\leq{k}\leq{n_{d}}} \Pr{(t_{k} | c)}}$}
+\end{center}
+where $\Pr{(t_{k} | c)}$ is the conditional probability of term $t_{k}$ occurring in a document of class $c$. We interpret $\Pr{(t_{k} | c)}$ as a measure of how much evidence $t_{k}$ contributes that $c$ is the correct class. $\Pr{(c)}$ is the prior probability of a document occurring in class $c$. If a document's terms do not provide clear evidence for one class versus another, we choose the one that has a higher prior probability. In text classification, our goal is to find the best class for the document. The best class in $NB$ classification is the most likely or maximum a posteriori (MAP) class $c_{map}$: 
+\begin{center}
+$c_{map} = argmax_{c \in{C}} \hat{Pr} (c) \prod_{1\leq{k}\leq{n_{d}}} \hat{Pr} (t_{k} | c)$
+\end{center}
+We have $\hat{Pr}$ instead of $\Pr$ because we do not know the true values of the parameters $\Pr{(c)}$ and $\Pr{(t_{k} | c)}$, but estimate them. 
+
+\subsubsection{Choice of parameters}
+Regarding the Naive Bayes method we modified only the smoothing factor $\alpha$, that is used to eliminate zeros, obtained as estimation because of sparseness, and simply adds one to each count. \\
+We use the following values for $\alpha = [.001,.01,1.0]$
+
+\subsection{Support Vector Machine}
+Support vector machines are supervised learning models with associated learning algorithms that analyze data used for classification. An SVM model is a representation of the examples as points in space, mapped so that the examples of the separate categories are divided by a clear gap that is as wide as possible. New examples are then mapped into that same space and predicted to belong to a category based on which side of the gap they fall. 
+
+\subsection{Choice of parameters}
+
+
+\section{Conclusion}
+
+
+
+
+
+\end{document}
