@@ -7,12 +7,6 @@ from sklearn.model_selection import train_test_split
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from nltk.corpus import stopwords
-from nltk.stem.snowball import EnglishStemmer
-from nltk.stem.lancaster import LancasterStemmer
-from nltk.stem.porter import PorterStemmer
-from nltk import word_tokenize
-
 from sklearn.neighbors import KNeighborsClassifier
 
 from sklearn.pipeline import Pipeline
@@ -22,29 +16,28 @@ from sklearn import metrics
 
 import pprint as pp
 
-import numpy as np
+from nltk.corpus import stopwords
+from nltk.stem.snowball import EnglishStemmer
 
-############################################
+from nltk import word_tokenize
+
 english_stemmer = EnglishStemmer()
-porter_stemmer = PorterStemmer()
-lancaster_stemmer = LancasterStemmer()
+
+stop = set(stopwords.words('english'))
+
+
+def english_tokenizer_stopwords(text):
+    stemmed_text = [english_stemmer.stem(word) for word in word_tokenize(text, language='english')]
+    filtered = [word for word in stemmed_text if word not in stop]
+    return filtered
 
 
 def english_tokenizer(text):
-    return [english_stemmer.stem(word) for word in word_tokenize(text, language='english')]
+    stemmed_text = [english_stemmer.stem(word) for word in word_tokenize(text, language='english')]
+    return stemmed_text
 
 
-def porter_tokenizer(text):
-    return [porter_stemmer.stem(word) for word in word_tokenize(text, language='english')]
-
-
-def lancaster_tokenizer(text):
-    return [lancaster_stemmer.stem(word) for word in word_tokenize(text, language='english')]
-
-
-######################################################################
-
-
+list_of_tokenizers = [None, english_tokenizer, english_tokenizer_stopwords]
 
 ## Dataset containing Positive and negative sentences on Ham-Spam comments on Youtube
 data_folder_training_set = "./datasets/Ham_Spam_comments/Training"
@@ -97,16 +90,19 @@ pipeline = Pipeline([
 ##  Keys are parameters of objects in the pipeline.
 ##  Values are set of values to try for a particular parameter.
 parameters = {
-    'vect__tokenizer': [None, english_tokenizer, porter_tokenizer, lancaster_tokenizer],
+    'vect__tokenizer': list_of_tokenizers,
     'vect__ngram_range': [(1, 1), (1, 2)],
-    'kNN__n_neighbors': [i for i in range(3, 10)]
+    'vect__lowercase': [True, False],
+
+    'kNN__weights': ['uniform', 'distance'],
+    'kNN__n_neighbors': [i for i in range(3, 14)]
 }
 
 ## Create a Grid-Search-Cross-Validation object
 ## to find in an automated fashion the best combination of parameters.
 grid_search = GridSearchCV(pipeline,
                            parameters,
-                           scoring=metrics.make_scorer(metrics.average_precision_score, average='weighted'),
+                           scoring=metrics.make_scorer(metrics.matthews_corrcoef),
                            cv=10,
                            n_jobs=-1,
                            verbose=2)

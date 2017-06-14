@@ -1,17 +1,7 @@
-import nltk
-
-nltk.download('punkt')
-
 from sklearn.datasets import load_files
 from sklearn.model_selection import train_test_split
 
 from sklearn.feature_extraction.text import TfidfVectorizer
-
-from nltk.corpus import stopwords
-from nltk.stem.snowball import EnglishStemmer
-from nltk.stem.lancaster import LancasterStemmer
-from nltk.stem.porter import PorterStemmer
-from nltk import word_tokenize
 
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import MultinomialNB
@@ -24,31 +14,57 @@ from sklearn import metrics
 
 import pprint as pp
 
-import numpy as np
+from nltk.corpus import stopwords
+from nltk.stem.snowball import EnglishStemmer
+from nltk.stem.lancaster import LancasterStemmer
+from nltk.stem.porter import PorterStemmer
+from nltk import word_tokenize
 
-############################################
 english_stemmer = EnglishStemmer()
 porter_stemmer = PorterStemmer()
 lancaster_stemmer = LancasterStemmer()
 
+stop = set(stopwords.words('english'))
+
+
+def english_tokenizer_stopwords(text):
+    stemmed_text = [english_stemmer.stem(word) for word in word_tokenize(text, language='english')]
+    filtered = [word for word in stemmed_text if word not in stop]
+    return filtered
+
 
 def english_tokenizer(text):
-    return [english_stemmer.stem(word) for word in word_tokenize(text, language='english')]
+    stemmed_text = [english_stemmer.stem(word) for word in word_tokenize(text, language='english')]
+    return stemmed_text
 
 
 def porter_tokenizer(text):
     return [porter_stemmer.stem(word) for word in word_tokenize(text, language='english')]
 
 
+def porter_tokenizer_stopwords(text):
+    stemmed_text = [porter_stemmer.stem(word) for word in word_tokenize(text, language='english')]
+    filtered = [word for word in stemmed_text if word not in stop]
+    return filtered
+
+
 def lancaster_tokenizer(text):
     return [lancaster_stemmer.stem(word) for word in word_tokenize(text, language='english')]
 
 
-######################################################################
+def lancaster_tokenizer_stopwords(text):
+    stemmed_text = [lancaster_stemmer.stem(word) for word in word_tokenize(text, language='english')]
+    filtered = [word for word in stemmed_text if word not in stop]
+    return filtered
 
 
+list_of_tokenizers = [None, english_tokenizer, english_tokenizer_stopwords]
 
-## Dataset containing Positive and negative sentences on Ham-Spam comments on Youtube
+# download nltk
+# nltk.download('punkt')
+# nltk.download('stopwords')
+
+# Dataset containing Positive and negative sentences on Ham-Spam comments on Youtube
 data_folder_training_set = "./datasets/Positive_negative_sentences/Training"
 data_folder_test_set = "./datasets/Positive_negative_sentences/Test"
 
@@ -80,16 +96,16 @@ print("Classes:")
 print(target_names)
 print("----------------------")
 
-## Vectorization object
+# Vectorization object
 vectorizer = TfidfVectorizer(strip_accents=None, preprocessor=None)
 
-## k-nearest neighbors classifier
+# k-nearest neighbors classifier
 kNN_classifier = KNeighborsClassifier()
 naive_bayes_classifier = MultinomialNB()
 support_vector_classifier = SVC()
 
-## With a Pipeline object we can assemble several steps
-## that can be cross-validated together while setting different parameters.
+# With a Pipeline object we can assemble several steps
+# that can be cross-validated together while setting different parameters.
 
 pipeline_kNN = Pipeline([
     ('vect', vectorizer),
@@ -105,33 +121,37 @@ pipeline_svc = Pipeline([
     ('vect', vectorizer),
     ('svc', support_vector_classifier),
 ])
-## Setting parameters.
-## Dictionary in which:
-##  Keys are parameters of objects in the pipeline.
-##  Values are set of values to try for a particular parameter.
+# Setting parameters.
+# Dictionary in which:
+# Keys are parameters of objects in the pipeline.
+# Values are set of values to try for a particular parameter.
 
 parameters_kNN = {
-    'vect__tokenizer': [None, english_tokenizer, porter_tokenizer, lancaster_tokenizer],
+    'vect__tokenizer': list_of_tokenizers,
     'vect__ngram_range': [(1, 1), (1, 2)],
-    'kNN__n_neighbors': [i for i in range(3, 6)]
+    'kNN__n_neighbors': [i for i in range(3, 14)],
+    'kNN__weights': ['uniform', 'distance']
 }
 
 parameters_nbc = {
-    'vect__tokenizer': [None, english_tokenizer, porter_tokenizer, lancaster_tokenizer],
+    'vect__tokenizer': list_of_tokenizers,
     'vect__ngram_range': [(1, 1), (1, 2)],
-    'nbc__alpha': [.001, .01, 1.0, 10.],
+    'nbc__fit_prior': [True, False],
+    'nbc__alpha': [.001, .01, 1.0]
 }
 
 parameters_svc = {
-    'vect__tokenizer': [None, english_tokenizer, porter_tokenizer, lancaster_tokenizer],
+    'vect__tokenizer': list_of_tokenizers,
     'vect__ngram_range': [(1, 1), (1, 2)],
-    'svc__C': [0.01, 0.1, 1.0],
-    'svc__kernel': ['rbf', 'poly'],
-    'svc__gamma': [0.01, 0.1, 1.0],
+
+    'svc__class_weight': ['balanced'],
+    'svc__C': [1., 10., 100.],
+    'svc__kernel': ['rbf', 'poly', 'linear'],
+    'svc__gamma': [1.0]
 }
 
-parameters = [parameters_kNN, parameters_nbc, parameters_svc]
-pipelines = [pipeline_kNN, pipeline_nbc, pipeline_svc]
+parameters = [parameters_nbc, parameters_svc, parameters_kNN]
+pipelines = [pipeline_nbc, pipeline_svc, pipeline_kNN]
 coefficients = []
 accuracies = []
 confusion_matrices = []
@@ -143,17 +163,14 @@ reports = []
 for i in range(len(parameters)):
     grid_search = GridSearchCV(pipelines[i],
                                parameters[i],
-                               scoring=metrics.make_scorer(metrics.average_precision_score, average='weighted'),
+                               scoring=metrics.make_scorer(metrics.matthews_corrcoef),
                                cv=10,
                                n_jobs=-1,
-                               verbose=2)
+                               verbose=10)
     ## Start an exhaustive search to find the best combination of parameters
     ## according to the selected scoring-function
-    print
-    grid_search.fit(X_train, Y_train)
-    print
 
-    ## Print results for each combination of parameters.
+    grid_search.fit(X_train, Y_train)  ## Print results for each combination of parameters.
     number_of_candidates = len(grid_search.cv_results_['params'])
     print("Results:")
     for j in range(number_of_candidates):
@@ -162,19 +179,17 @@ for i in range(len(parameters)):
                grid_search.cv_results_['mean_test_score'][j],
                grid_search.cv_results_['std_test_score'][j]))
 
-    print
     print("Best Estimator:")
     pp.pprint(grid_search.best_estimator_)
-    print
+
     print("Best Parameters:")
     pp.pprint(grid_search.best_params_)
-    print
+
     print("Used Scorer Function:")
     pp.pprint(grid_search.scorer_)
-    print
+
     print("Number of Folds:")
     pp.pprint(grid_search.n_splits_)
-    print
 
     # Let's train the classifier that achieved the best performance,
     # considering the select scoring-function,
@@ -186,35 +201,33 @@ for i in range(len(parameters)):
         Y_test,
         Y_predicted,
         target_names=target_names)
-    print
+
     print("----------------------------------------------------")
     print(output_classification_report)
     print("----------------------------------------------------")
-    print
 
     # Compute the confusion matrix
     confusion_matrix = metrics.confusion_matrix(Y_test, Y_predicted)
-    print
+
     print("Confusion Matrix: True-Classes X Predicted-Classes")
     print(confusion_matrix)
 
     # Compute the Normalized-accuracy
     normalized_accuracy = metrics.accuracy_score(Y_test, Y_predicted)
-    print
+
     print("Normalized Accuracy: ")
     print(normalized_accuracy)
 
     # Compute the Matthews Corrcoef value
     matthews_corr_coef = metrics.matthews_corrcoef(Y_test, Y_predicted)
-    print
+
     print("Matthews correlation coefficient: ")
     print(matthews_corr_coef)
 
-    reports.append(output_classification_report)
+    reports.append(grid_search.best_params_)
     coefficients.append(matthews_corr_coef)
     accuracies.append(normalized_accuracy)
     confusion_matrices.append(confusion_matrix)
 
 for i in range(len(parameters)):
-    print i, reports[i], confusion_matrices[i], accuracies[i], coefficients[i]
-
+    print(i, coefficients[i], reports[i])
