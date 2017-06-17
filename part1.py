@@ -104,7 +104,7 @@ grid_search = GridSearchCV(pipeline,
                            parameters,
                            scoring=metrics.make_scorer(metrics.matthews_corrcoef),
                            cv=10,
-                           n_jobs=-1,
+                           n_jobs= 2,
                            verbose=2)
 
 ## Start an exhaustive search to find the best combination of parameters
