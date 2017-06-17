@@ -23,7 +23,7 @@
 \section{Introduction}
 The following document concerns the text classification problems, solved by applying supervised learning techniques and is part of the third homework of the \textit{Web Information Retrieval} course.\\
 The goal of this homework is to tune and train different classifiers. In order to complete the job we used the \textit{scikit-learn} library, to adjust the classifiers, and \textit{nltk} library to compute the lexical analysis.
-The homework is divided in two parts: \\
+The homework is divided in two parts: 
 \begin{itemize}
 \item{\textbf{Part One:} } In this part of the homework we tune and train a classifier based on \textit{K-Nearest-Neighbors} technique for detecting spam comments associated to YouTube videos.
 \item{\textbf{Part Two:} } Here, we tune and train three different classifiers to solve a sentiment analysis problem.
@@ -34,7 +34,7 @@ The homework is divided in two parts: \\
 
 \section{Part One}
 In this part of the homework we had to solve a Spam-Ham classification problem, using a kNN classifier and some scikit-learn tools, trying to find the best combination of parameters for solving the problem. In order to reach the goal and to avoid overfitting, we performed a \textit{10-Fold-Cross-Validation process} through the grid-searchCV, a tool able to exhaustively considers all parameter combinations. To represent documents as vectors we used the scikit-learn class \textit{TfIdfVectorizer}.  Once we have the best combination of parameters, we started to evaluate the performance of the classifier on the Test-Set.  \\
-For the evaluation process we used the following tools provided by scikit-learn:\\
+For the evaluation process we used the following tools provided by scikit-learn:
 \begin{itemize}
 \item{$\textbf{metrics.classification\_report:}$} To have a report with the main classification metrics
 \item{$\textbf{metrics.confusion\_matrix:}$} To compute the Confusion-Matrix, a tool to evaluate the accuracy of a classification. By definition a confusion matrix $C$ is such that $C_{i, j}$ is equal to the number of observations known to be in group $i$ but predicted to be in group $j$. 
@@ -43,22 +43,75 @@ For the evaluation process we used the following tools provided by scikit-learn:
 \end{itemize}
 To tune and train the classifier, we used the data collected inside the directory \textit{Training} while to evaluate the performance of the final classifier, we used the data collected inside the directory \textit{Test}.\\
 
-\subsection{Choice of parameters}
-Defining the Grid-SearchCV, we used a Pipeline object to assemble several steps that can be cross-validated while setting different parameters. These parameters refer mostly on the kNN classifier and the \textit{Tf-Idf Vectorizer}. To find the best combination of parameters for the classifier we applied an exhaustively search on its following attributes : 
+\subsection{Conclusions}
+\subsubsection{Dataset Part One}
+	\begin{tabular}{|l|c|r|}
+	\hline
+ 		& Training Set & Test Set\\
+	\hline
+		Spam & 122 & 53\\
+	\hline
+		Ham & 120 & 52\\
+	\hline
+	\end{tabular}
+	
+\subsubsection{List of all parameters}
 \begin{itemize}
-\item{\textbf{weights:}} A weight function used in prediction. We used \textit{uniform} and \textit{distance}. In uniform, all points are weighted equally while in distance closer neighbors of a query point will have a greater influence than neighbors which are further away. 
-\item{$\textbf{n\_neighbors:}$}  It is desirable for $n$ to be odd to make ties less likely. The values 3 and 5 are the most common choices. However, we tried values in a range from 3 to 11.
 
-\end{itemize} 
+		\item{\textbf{Tokenizer:}} Tokenization is the process of classifying sections of a string of input characters. Before creating the tokenizer we used the 		English stemmer with and without \textit{stopwords}. 
+		\begin{itemize}
+	\item{$\textbf{Ngram\_range:}$}  An n-gram is a contiguous sequence of $n$ items from a given sequence of text. We analyzed the data once as unigrams 		(n=1) and once as bigrams (n=2) .\\
+		For example, with a sentence like \textit{"The quick brown fox jumps over the lazy dog"} we have :\\
+		\textbf{Unigram:} "The", "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog"\\
+		\textbf{Bigram:} "The quick", "quick brown", "brown fox", "fox jumps", "jumps over", "over the", "the lazy", "lazy dog"
+	
+	\end{itemize}
 
-Regarding to the vectorizer we set a part of its parameters as follows:
-\begin{itemize}
-\item{\textbf{Tokenizer:}} Tokenization is the process of classifying sections of a string of input characters. Before creating the tokenizer we used the English stemmer with and without \textit{stopwords}. 
-\item{$\textbf{Ngram\_range:}$}  An n-gram is a contiguous sequence of $n$ items from a given sequence of text. We analyzed the data once as unigrams (n=1) and once as bigrams (n=2) .\\
-For example, with a sentence like \textit{"The quick brown fox jumps over the lazy dog"} we have :\\
-\textbf{Unigram:} "The", "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog"\\
-\textbf{Bigram:} "The quick", "quick brown", "brown fox", "fox jumps", "jumps over", "over the", "the lazy", "lazy dog"
+
+\item{\textbf{K-Nearest-Neighbors}} 
+
+	\begin{itemize}
+
+		\item{\textbf{weights:}} A weight function used in prediction. We used \textit{uniform} and \textit{distance}. In 			uniform, all points are 				weighted equally while in distance closer neighbors of a query point will have a 		greater influence than neighbors which are further 				away.
+
+		\item{$\textbf{n\_neighbors:}$}  It is desirable for $n$ to be odd to make ties less likely. The values 		3 and 5 are the most common choices. 				However, we tried values in a range from 3 to 11.	
+	\end{itemize}
+
 \end{itemize}
+
+\subsection{How to perform the training-validation process using more than one CPU core}
+\includegraphics[scale=0.8]{gridsearch.png}\\
+
+
+Defining the Grid-SearchCV, we used a Pipeline object to assemble several steps that can be cross-validated while setting different parameters. 
+These parameters refer mostly on the classifiers and the \textit{Tf-Idf Vectorizer}. We set the rest of parameters as follows:
+\begin{itemize}
+\item{\textbf{scoring:}} We set the scoring function on the Matthews Correlation Coefficient. 
+\item{\textbf{cv:}} We set the value of cv to be equal to 10 since in the homework specification, it was requested to perform a 10-Fold-Cross-Validation.
+\item{$\textbf{n\_jobs:}$} This is the number of jobs to run in parallel. We have to set this parameter to a value equal to the number of core in the machine. 
+\item{\textbf{verbose:}} It controls the verbosity. The higher, the more messages. 
+
+\end{itemize}
+
+\subsection{The best configuration of parameters found by the GridSearchCV object at the end of the      10-Fold-Cross-Validation process.}
+
+At the end of the execution we found this as the best configuration of parameters : \\
+\includegraphics{bestconfiguration1.png}
+
+
+\subsection{Report}
+\includegraphics{report1.png}
+
+\subsection{Confusion Matrix}
+\includegraphics{confusionmatrix1.png}
+
+\subsection{Normalized Accuracy}
+\includegraphics{accuracy1.png}
+
+\subsection{Matthews Correlation Coefficient}
+\includegraphics{mcc1.png}
+
+
 
 
 
@@ -76,20 +129,88 @@ $c_{map} = argmax_{c \in{C}} \hat{Pr} (c) \prod_{1\leq{k}\leq{n_{d}}} \hat{Pr} (
 \end{center}
 We have $\hat{Pr}$ instead of $\Pr$ because we do not know the true values of the parameters $\Pr{(c)}$ and $\Pr{(t_{k} | c)}$, but estimate them. 
 
-\subsubsection{Choice of parameters}
-Regarding the Naive Bayes method we modified only the smoothing factor $\alpha$, that is used to eliminate zeros, obtained as estimation because of sparseness, and simply adds one to each count. \\
-We use the following values for $\alpha = [.001,.01,1.0]$
+
 
 \subsection{Support Vector Machine}
 Support vector machines are supervised learning models with associated learning algorithms that analyze data used for classification. An SVM model is a representation of the examples as points in space, mapped so that the examples of the separate categories are divided by a clear gap that is as wide as possible. New examples are then mapped into that same space and predicted to belong to a category based on which side of the gap they fall. 
 
-\subsection{Choice of parameters}
+\subsection{Conclusions}
+
+\subsubsection{Dataset}
+\begin{tabular}{|l|c|r|}
+\hline
+ & Training Set & Test Set\\
+\hline
+Positive & 308 & 308\\
+\hline
+Negative & 249 & 250\\
+\hline
+\end{tabular}
+
+\subsubsection{List of all parameters}
 
 
-\section{Conclusion}
+\begin{itemize}
+
+\item{\textbf{Vectorizer}}
+	\begin{itemize}
+
+		\item{\textbf{Tokenizer:}} Tokenization is the process of classifying sections of a string of input characters. Before creating the tokenizer we used the 		English stemmer with and without \textit{stopwords}. 
+
+	\item{$\textbf{Ngram\_range:}$}  An n-gram is a contiguous sequence of $n$ items from a given sequence of text. We analyzed the data once as unigrams 		(n=1) and once as bigrams (n=2) .\\
+		For example, with a sentence like \textit{"The quick brown fox jumps over the lazy dog"} we have :\\
+		\textbf{Unigram:} "The", "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog"\\
+		\textbf{Bigram:} "The quick", "quick brown", "brown fox", "fox jumps", "jumps over", "over the", "the lazy", "lazy dog"
+	
+	\end{itemize}
 
 
+\item{\textbf{K-Nearest-Neighbors}} 
 
+	\begin{itemize}
+
+		\item{\textbf{weights:}} A weight function used in prediction. We used \textit{uniform} and \textit{distance}. In 			uniform, all points are 				weighted equally while in distance closer neighbors of a query point will have a 		greater influence than neighbors which are further 				away.
+
+		\item{$\textbf{n\_neighbors:}$}  It is desirable for $n$ to be odd to make ties less likely. The values 		3 and 5 are the most common choices. 				However, we tried values in a range from 3 to 11.	
+	\end{itemize}
+
+	
+\item{\textbf{Naive Bayes Classifier}}
+
+	\begin{itemize}
+
+		\item{\textbf{alpha:}} It is the smoothing factor, that is used to eliminate zeros. It is obtained as estimation because of sparseness, and simply adds 		one to each count. We used the following values for $\alpha = [.001,.01,1.0]$.
+
+		\item{$\textbf{fit\_prior:}$} It is a boolean value chosen in order to learn class prior probabilities or not. If false a uniform prior will be used. 
+	\end{itemize}
+
+
+\item{\textbf{Support Vector Machine}}
+
+	\begin{itemize}
+		\item{$\textbf{C:}$} The parameter C is a regularization term, which provides a way to control overfitting. It is a trade off on how fat it can make the 			margin with respect to how many points have to be moved around to allow this margin. We tried the following value : 1,10,100
+
+		\item{$\textbf{class\_weight:}$} Set the parameter $C$ of class $i$ to $class\_weight[i] * C$
+
+		\item{$\textbf{kernel:}$} A kernel function K is such a function that corresponds to a dot product in some expanded feature space. We tried out three 			variants of such function: linear kernel, polynomial kernel and radial basis functions $(RBF)$. 	
+	\end{itemize}
+\end{itemize}
+
+\subsection{Best configuration of parameters found by the Grid-SearchCV object at the end of the 10-Fold-Cross-Validation process}
+\subsubsection{K-Nearest Neighbors}
+\includegraphics{knnperformance}
+\subsubsection{Naive Bayes Classifier}
+\includegraphics{nbcperformance}
+\subsubsection{Support Vector Machine}
+\includegraphics{svmperformance}
+
+\subsection{Report, Confusion Matrix, Normalized Accuracy, Matthews Correlation Coefficient}
+\subsubsection{K-Nearest Neighbors}
+\includegraphics{knnfinal.png}
+\subsubsection{Naive Bayes Classifier}
+\includegraphics{nbcfinal.png}
+\subsubsection{Support Vector Machine}
+\includegraphics{svmfinal.png}
 
 
 \end{document}
